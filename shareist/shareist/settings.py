@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'playlist',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -75,10 +77,13 @@ WSGI_APPLICATION = 'shareist.wsgi.application'
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+        'default': {'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'shareist_db',
+        'USER': 'postgres',
+        'PASSWORD': 'welcome',
+        'HOST': 'localhost',
+        'PORT': '5432',
+        }
 }
 
 
