@@ -1,51 +1,72 @@
 from playlist.models import Playlist, Track
-from playlist.serializers import PlaylistSerializer, TrackSerializer
+from playlist.serializers import PlaylistSerializer, TrackSerializer, UserSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.auth.models import User
+#from rest_framework import permissions
+from rest_framework import generics
+from shareist.permissions import UserPermissions
+
+class UserList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class UserDetail(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
 
 #/playlist
 class Playlist_List(APIView):
 
+    permission_classes = (UserPermissions,)
+
     def get(self, request, format=None):
-        playlists = Playlist.objects.all()
-        serializer = PlaylistSerializer(playlists, many=True)
-        return Response(serializer.data)
+    	playlists = Playlist.objects.all()
+    	serializer = PlaylistSerializer(playlists, many=True)
+    	return Response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = PlaylistSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    	serializer = PlaylistSerializer(data=request.data)
+    	if serializer.is_valid():
+    		serializer.save()
+    		return Response(serializer.data, status=status.HTTP_201_CREATED)
+    	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def perform_create(self, serializer):
+    	serializer.save(owner=self.request.user)	
 
 #/playlist/<pk>
 class Playlist_Detail(APIView):
 
-	def get_object(self, pk):
-		try:
-			return Playlist.objects.get(pk=pk)
-		except Playlist.DoesNotExist:
-			raise Http404
+    permission_classes = (UserPermissions,)
 
-	def get(self, request, pk, format=None):
-		playlist = self.get_object(pk)
-		serializer = PlaylistSerializer(playlist)
-		return Response(serializer.data)
+    def get_object(self, pk):
+    	try:
+    		return Playlist.objects.get(pk=pk)
+    	except Playlist.DoesNotExist:
+    		raise Http404
 
-	def put(self, request, pk, format=None):
-		playlist = self.get_object(pk)
-		serializer = PlaylistSerializer(playlist, data=request.data)
-		if serializer.is_valid():
-			serializer.save()
-			return Response(serializer.data)
-		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request, pk, format=None):
+    	playlist = self.get_object(pk)
+    	serializer = PlaylistSerializer(playlist)
+    	return Response(serializer.data)
 
-	def delete(self, request, pk, format=None):
-		playlist = self.get_object(pk)
-		playlist.delete()
-		return Response(status=status.HTTP_204_NO_CONTENT)        
+    def put(self, request, pk, format=None):
+    	playlist = self.get_object(pk)
+    	serializer = PlaylistSerializer(playlist, data=request.data)
+    	if serializer.is_valid():
+    		serializer.save()
+    		return Response(serializer.data)
+    	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+    	playlist = self.get_object(pk)
+    	playlist.delete()
+    	return Response(status=status.HTTP_204_NO_CONTENT)        
 
 #/track
 class Track_List(APIView):

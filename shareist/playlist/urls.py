@@ -25,6 +25,9 @@ urlpatterns = [
     url(r'^track/$',views.Track_List.as_view()),
     url(r'^track/(?P<pk>[0-9]+)/$', views.Track_Detail.as_view()),
 
+    url(r'^users/$', views.UserList.as_view()),
+	url(r'^users/(?P<pk>[0-9]+)/$', views.UserDetail.as_view()),
+
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

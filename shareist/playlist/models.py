@@ -1,8 +1,12 @@
+from django.db.models.signals import post_save
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
 
 class Playlist(models.Model):
-	author = models.ForeignKey('auth.User')
+	owner = models.ForeignKey('auth.User', related_name='playlists')
 	title = models.CharField(max_length=50)
 	created_date = models.DateTimeField(default=timezone.now)
 	shared_with = models.ManyToManyField('auth.User', related_name='shared_Playlist', blank=True)
@@ -28,6 +32,11 @@ class Track(models.Model):
 
 	class Meta:
 		ordering = ('title',)
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)	
     
 
 
