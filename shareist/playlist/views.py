@@ -5,9 +5,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.models import User
-#from rest_framework import permissions
+from rest_framework import permissions
 from rest_framework import generics
-from shareist.permissions import UserPermissions
+from shareist.permissions import IsPlaylistOwner
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
@@ -22,36 +23,38 @@ class UserDetail(generics.RetrieveAPIView):
 #/playlist
 class Playlist_List(APIView):
 
-    permission_classes = (UserPermissions,)
+	permission_classes=(permissions.IsAuthenticated, IsPlaylistOwner)
 
-    def get(self, request, format=None):
-    	playlists = Playlist.objects.all()
-    	serializer = PlaylistSerializer(playlists, many=True)
-    	return Response(serializer.data)
+	def get(self, request, format=None):
+		playlists = Playlist.objects.all().filter(owner=request.user)
+		serializer = PlaylistSerializer(playlists, many=True)
+		return Response(serializer.data)
 
-    def post(self, request, format=None):
-    	serializer = PlaylistSerializer(data=request.data)
-    	if serializer.is_valid():
-    		serializer.save()
-    		return Response(serializer.data, status=status.HTTP_201_CREATED)
-    	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+	def post(self, request, format=None):
+		serializer = PlaylistSerializer(data=request.data)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data, status=status.HTTP_201_CREATED)
+		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def perform_create(self, serializer):
-    	serializer.save(owner=self.request.user)	
+	def perform_create(self, serializer):
+		serializer.save(owner=self.request.user)	
 
 #/playlist/<pk>
 class Playlist_Detail(APIView):
 
-    permission_classes = (UserPermissions,)
+    permission_classes = (permissions.IsAuthenticated,IsPlaylistOwner)
 
-    def get_object(self, pk):
+    def get_object(self, pk, request):
     	try:
-    		return Playlist.objects.get(pk=pk)
+    		return Playlist.objects.get(pk=pk, owner=request.user)
     	except Playlist.DoesNotExist:
     		raise Http404
 
     def get(self, request, pk, format=None):
-    	playlist = self.get_object(pk)
+    	playlist = self.get_object(pk, request)
+    	print(request.user.username)
+    	print(playlist.owner)
     	serializer = PlaylistSerializer(playlist)
     	return Response(serializer.data)
 
@@ -71,7 +74,8 @@ class Playlist_Detail(APIView):
 #/track
 class Track_List(APIView):
 
-	permission_classes = (UserPermissions,)
+	permission_classes = (IsPlaylistOwner,)
+
 	def get(self, request, format=None):
 		tracks = Track.objects.all()
 		serializer = TrackSerializer(tracks, many=True)
@@ -87,7 +91,7 @@ class Track_List(APIView):
 #track/<pk>
 class Track_Detail(APIView):
 
-	permission_classes = (UserPermissions,)
+	permission_classes = (IsPlaylistOwner,)
 	def get_object(self, pk):
 		try:
 			return Track.objects.get(pk=pk)
