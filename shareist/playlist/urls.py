@@ -19,14 +19,15 @@ from . import views
 from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
-    url(r'^playlist/$',views.Playlist_List.as_view()),
-    url(r'^playlist/(?P<pk>[0-9]+)/$', views.Playlist_Detail.as_view()),
+    url(r'^api/$', views.api_root),
+    url(r'^api/playlist/$',views.Playlist_List.as_view(), name='playlist-list'),
+    url(r'^api/playlist/(?P<pk>[0-9]+)/$', views.Playlist_Detail.as_view(),name='playlist-detail'),
 
-    url(r'^track/$',views.Track_List.as_view()),
-    url(r'^track/(?P<pk>[0-9]+)/$', views.Track_Detail.as_view()),
+    url(r'^api/track/$',views.Track_List.as_view(), name='track-list'),
+    url(r'^api/track/(?P<pk>[0-9]+)/$', views.Track_Detail.as_view(),name='track-detail'),
 
-    url(r'^users/$', views.UserList.as_view()),
-	url(r'^users/(?P<pk>[0-9]+)/$', views.UserDetail.as_view()),
+    url(r'^api/users/$', views.UserList.as_view(), name='user-list'),
+	url(r'^api/users/(?P<pk>[0-9]+)/$', views.UserDetail.as_view(), name='user-detail'),
 
 ]
 

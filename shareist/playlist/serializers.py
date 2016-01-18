@@ -2,20 +2,20 @@ from rest_framework import serializers
 from playlist.models import Track, Playlist
 from django.contrib.auth.models import User
 
-class TrackSerializer(serializers.ModelSerializer):
+class TrackSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Track
-        fields = ('id', 'title', 'url', 'artist', 'owner', 'added_date', 'playlist', 'shared_with')
+        fields = ('url', 'title', 'url', 'artist', 'owner', 'added_date', 'shared_with')
 
-class PlaylistSerializer(serializers.ModelSerializer):
+class PlaylistSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Playlist
-        fields = ('id', 'owner','title', 'created_date', 'shared_with')       
+        fields = ('url', 'owner','title', 'created_date', 'shared_with', 'tracks')       
 
-class UserSerializer(serializers.ModelSerializer):
-    playlists = serializers.PrimaryKeyRelatedField(many=True, queryset=Playlist.objects.all())
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    playlists = serializers.HyperlinkedRelatedField(many=True,view_name='playlist-detail', read_only=True)
     owner = serializers.ReadOnlyField(source='owner.username')
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'playlists', 'owner') 
+        fields = ('url', 'username', 'owner', 'playlists') 

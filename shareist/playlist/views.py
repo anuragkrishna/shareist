@@ -9,6 +9,16 @@ from rest_framework import permissions
 from rest_framework import generics
 from shareist.permissions import IsPlaylistOwner
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.decorators import api_view
+from rest_framework.reverse import reverse
+
+
+@api_view(('GET',))
+def api_root(request, format=None):
+    return Response({
+        'playlists': reverse('playlist-list', request=request, format=format),
+        'tracks': reverse('track-list', request=request, format=format)
+    })
 
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
@@ -27,11 +37,11 @@ class Playlist_List(APIView):
 
 	def get(self, request, format=None):
 		playlists = Playlist.objects.all().filter(owner=request.user)
-		serializer = PlaylistSerializer(playlists, many=True)
+		serializer = PlaylistSerializer(playlists, many=True, context={'request': request})
 		return Response(serializer.data)
 
 	def post(self, request, format=None):
-		serializer = PlaylistSerializer(data=request.data)
+		serializer = PlaylistSerializer(data=request.data, context={'request': request})
 		if serializer.is_valid():
 			serializer.save()
 			return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -53,14 +63,12 @@ class Playlist_Detail(APIView):
 
     def get(self, request, pk, format=None):
     	playlist = self.get_object(pk, request)
-    	print(request.user.username)
-    	print(playlist.owner)
-    	serializer = PlaylistSerializer(playlist)
+    	serializer = PlaylistSerializer(playlist, context={'request': request})
     	return Response(serializer.data)
 
     def put(self, request, pk, format=None):
     	playlist = self.get_object(pk)
-    	serializer = PlaylistSerializer(playlist, data=request.data)
+    	serializer = PlaylistSerializer(playlist, data=request.data, context={'request': request})
     	if serializer.is_valid():
     		serializer.save()
     		return Response(serializer.data)
@@ -74,15 +82,15 @@ class Playlist_Detail(APIView):
 #/track
 class Track_List(APIView):
 
-	permission_classes = (IsPlaylistOwner,)
+	permission_classes=(permissions.IsAuthenticated, IsPlaylistOwner)
 
 	def get(self, request, format=None):
-		tracks = Track.objects.all()
-		serializer = TrackSerializer(tracks, many=True)
+		tracks = Track.objects.all().filter(owner=request.user)
+		serializer = TrackSerializer(tracks, many=True, context={'request': request})
 		return Response(serializer.data)
 
 	def post(self, request, format=None):
-		serializer = PlaylistSerializer(data=request.data)
+		serializer = TrackSerializer(data=request.data, context={'request': request})
 		if serializer.is_valid():
 			serializer.save()
 			return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -91,21 +99,21 @@ class Track_List(APIView):
 #track/<pk>
 class Track_Detail(APIView):
 
-	permission_classes = (IsPlaylistOwner,)
-	def get_object(self, pk):
+	permission_classes=(permissions.IsAuthenticated, IsPlaylistOwner)
+	def get_object(self, pk, request):
 		try:
-			return Track.objects.get(pk=pk)
+			return Track.objects.get(pk=pk, owner=request.user)
 		except Track.DoesNotExist:
 			raise Http404
 
 	def get(self, request, pk, format=None):
-		track = self.get_object(pk)
-		serializer = TrackSerializer(track)
+		track = self.get_object(pk, request)
+		serializer = TrackSerializer(track, context={'request': request})
 		return Response(serializer.data)
 
 	def put(self, request, pk, format=None):
 		track = self.get_object(pk)
-		serializer = TrackSerializer(track, data=request.data)
+		serializer = TrackSerializer(track, data=request.data, context={'request': request})
 		if serializer.is_valid():
 			serializer.save()
 			return Response(serializer.data)
