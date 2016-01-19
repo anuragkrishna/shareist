@@ -5,12 +5,12 @@ from django.contrib.auth.models import User
 class TrackSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Track
-        fields = ('url', 'title', 'url', 'artist', 'owner', 'added_date', 'shared_with')
+        fields = ('url', 'title', 'link', 'artist', 'owner', 'added_date')
 
 class PlaylistSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Playlist
-        fields = ('url', 'owner','title', 'created_date', 'shared_with', 'tracks')       
+        fields = ('url', 'owner','title', 'created_date', 'tracks')       
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     playlists = serializers.HyperlinkedRelatedField(many=True,view_name='playlist-detail', read_only=True)
